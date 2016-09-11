@@ -1,12 +1,16 @@
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.SyncFailedException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 
-public class QuickWeather {
+public class QuickWeather{
 
-    private static final String WEATHER_API_ZIP =
-            "api.openweathermap.org/data/2.5/weather?zip=ZIPCODE&APPID=KEY";
+//    private static final String WEATHER_API_ZIP =
+//            "api.openweathermap.org/data/2.5/weather?zip=ZIPCODE,us&APPID=KEY";
     private static final String WEATHER_API_CITY =
             "api.openweathermap.org/data/2.5/weather?q=CITY&APPID=KEY";
     private static final String KEY =
@@ -15,38 +19,35 @@ public class QuickWeather {
     public static void main(String[] args){
         if(args.length < 1){
             //nope
-            System.out.println("try [city] or -z [zipcode]");
+            System.out.println("try: QuickWeather [city]");
         } else {
             if(args[0].equals("-z")){
-                //zipcode
-                if(args[1] != null) {
-                    String report = getZipWeather(args[1]);
-                    System.out.println(report);
-                } else {
-                    System.out.println("Include a zip code -z [zipcode]");
-                }
+                //zipcode api
+                //doesnt seem to work :<
             } else {
-                String report = getCityWeather(args[0]);
-                System.out.println(report);
+                String report = getCityWeather(args[0].trim());
+                if(report == null){
+                    System.out.println("Connection to weather api failed, are you online?");
+                } else {
+                    System.out.println(report);
+                }
             }
         }
     }
 
     private static String getCityWeather(String city) {
-        //api.openweathermap.org/data/2.5/weather?q=CITY
-        String adj = WEATHER_API_CITY
-                .replace("KEY", KEY)
-                .replace("CITY", city);
-
+        //api.openweathermap.org/data/2.5/weather?q=CITY,KEY=KEY
+        String adj = WEATHER_API_CITY.replace("KEY", KEY).replace("CITY", city).trim();
+        System.out.println("Getting city forecast for " + city + " @ \n-" + adj);
         try {
-            URL url = new URL(String.format(adj));
-            HttpURLConnection connection =
-                    (HttpURLConnection) url.openConnection();
+            URI addr = new URI("http://" + adj);
+            HttpURLConnection con = (HttpURLConnection) addr.toURL().openConnection();
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-            StringBuffer json = new StringBuffer(10000);
+                    new InputStreamReader(con.getInputStream()));
+            StringBuilder json = new StringBuilder(1000);
             String tmp = "";
             while ((tmp = reader.readLine()) != null) {
+                System.out.print(tmp);
                 json.append(tmp).append("\n");
             }
             reader.close();
@@ -55,32 +56,7 @@ public class QuickWeather {
 
             return data;
         } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String getZipWeather(String zip) {
-        //api.openweathermap.org/data/2.5/weather?zip=ZIPCODE"
-        String adj = WEATHER_API_ZIP
-                .replace("KEY", KEY)
-                .replace("ZIPCODE", zip);
-        try {
-            URL url = new URL(String.format(adj));
-            HttpURLConnection connection =
-                    (HttpURLConnection) url.openConnection();
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-            StringBuffer json = new StringBuffer(10000);
-            String tmp = "";
-            while ((tmp = reader.readLine()) != null) {
-                json.append(tmp).append("\n");
-            }
-            reader.close();
-
-            String data = json.toString();
-
-            return data;
-        } catch (Exception e) {
+            System.out.println("\n" + e.toString() + "\n");
             return null;
         }
     }
