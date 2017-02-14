@@ -1,4 +1,3 @@
 # QuickWeather
-Just the weather fetch from HonestWeather, nice for a quick command line tool.
-powered by openweathermap.org
-output in the form of a JSON
+Just the weather fetch from HonestWeather, a nice for a quick command line tool.
+Powered by openweathermap.org, with output in the form of a JSON
